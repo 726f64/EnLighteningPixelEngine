@@ -1,1 +1,37 @@
-Radial Catherine Wheel
+Now a generic WS2812 Pixel Program
+
+Made repo
+
+09.11.2017  Byte order is Red, Green, Blue
+            Needed ASM to output bytes quick enough to work.
+            RAM is at 0x00A0
+            Need test out numbers that work - 20 pixels OK red/blue
+
+            Try out some effects using a single string
+            Later this will be arms of the finished star effect.
+
+11.11.2017  Copied Radial Catherine Wheel to get a version that grabs
+            data from the UART output of a Raspberry Pi eg 150x bytes=50 pixels.
+            There is a start of frame that can cause an interrupt.
+
+            Currently issues that TMR1 when enabled for the '1ms ticks' causes lock up
+
+13.11.2017  Lots of issues getting UART to work + realise that it will be too slow/unreliable.
+            Pulled udp Pi code from DMX512 project - working OK
+            Chosen to port to a PIC16F18857 which has 4x CLC plus 2x SPI (one for WS2812 timing and one for control from RPi)
+
+10.11.2017  I broke the Pi Zero W yesterday and wanted to still get the lights working in the trees so 
+            modified the code again hoping to just alternate Magenta/Cyan/Yellow etc. Must be a lead issue
+            as the board appeared t work but the lights did not.
+            Started to go off Vixen3 again due to the issues with setting up PiZ/WiFi/Signal strengths and 
+            needing the PC running. Thinking self contained is good !
+
+            But  do like the effects so perhaps now I have the WS2812 driver as a module I can be more creative
+            with my C code to do those effects? Code now is to have a separate EffectsFSR. Also add in a 25ms timer
+            that will update the LEDs (if not in middle of recalulating the string). Or use a separate buffer ?
+
+29.5.2018   Tried to take a more generic approach. Added Firefly mode. Added to Github for version control.
+
+03.06.2018  Add switch to step through, ignoring the duration values via a global flag?
+
+

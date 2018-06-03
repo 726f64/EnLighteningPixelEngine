@@ -8,80 +8,118 @@
  */
 
 
+
+
+
+
 #include <xc.h>
-#include "stdint.h"
 #include "Effects.h"
 #include "System.h"
+#include <stdint.h>
+#include "Processor.h"
+#include <stdbool.h>
 
+extern struct Pixel SparklePatternA[PatternSize];
+extern struct Pixel SparklePatternB[PatternSize];
 
+//extern struct Pixel DisplayRAM[RAMsize];
+extern volatile uint8_t DisplayRAM[NumPixels*3] DisplayRAMStart
 
-uint8_t SelectPattern(void) {
-
-    uint8_t PatternChoice;
-    
-    return PatternChoice;
-}
-
-// Rotate the inner spiral by one pixel - requires direction and what pixel to feed in
-//void RotateWheel(uint8_t Direction, EffectsSpiral AppliedEffect, Pixel FeedInPixel){
-void RotateWheel(uint8_t Direction, enum EffectsSpiral AppliedEffect,struct Pixel FeedInPixel){
-    
-    struct Pixel PixelToMove;
-    
-    for (uint8_t Index=NumSpiral; Index>1;Index--){       //eg 50 to 2 e.g. all but 1st element !
-        PixelToMove=DisplayRAM[Index-2];                 // -1 for array eg 49=last element, -1 for pixel before it
-        //Change the Pixel according to the effect...
-        if (AppliedEffect==0){
-            PixelToMove=PixelToMove;
-        }
-        else if (AppliedEffect==1){
-            
-        }
-        else {
-            PixelToMove.Blue=0;
-            PixelToMove.Red=0;
-            PixelToMove.Green=0;
-        }
-        
-        DisplayRAM[Index-1]=PixelToMove;
+// Set every pixel in the display RAM to the same colour - typically used for testing or setting to off
+void SetAllSameColour(struct Pixel ThisColour){
+    // Set all the Display RAM to zero values
+    for (uint8_t ThisPixel=0; (ThisPixel<NumPixels);ThisPixel++){
+        SetDisplayRAM(ThisPixel,ThisColour);
     }
-    
-    // Now feed in new Pixel to the 1st element
-    // XXXX
-    
-    
+    return;
 }
 
-//Make the selected arm spark outwards/inwards
-void Sparks(uint8_t Direction, uint8_t SelectedArm){
-
-    struct Pixel PixelToMove;
-    uint8_t IndexOffset=NumSpiral+((SelectedArm-1)*NumArmPixels);
-
-    for (uint8_t Index=NumArmPixels; Index>1; Index--){
-        PixelToMove=DisplayRAM[Index-2+IndexOffset];                
-        DisplayRAM[Index-1]=PixelToMove;   
+// Set every pixel in the display RAM to the same colour - typically used for testing or setting to off
+void RotateRAM(){
+    // Rotate RAM along and fade
+    struct Pixel TempPixel;
+    
+    for (uint8_t ThisPixel=0; (ThisPixel<(RAMsize-1));ThisPixel=ThisPixel+3){
+        TempPixel.Red=DisplayRAM[ThisPixel];
+        TempPixel.Green=DisplayRAM[ThisPixel+1];
+        TempPixel.Blue=DisplayRAM[ThisPixel+2];
     }
-
-    //Now feed into 1st element of this arm
-
-    
-    
+    return;
 }
 
-void OutputDisplayRAM(void){
-    uint8_t RedLED;
-    uint8_t GreenLED;    
-    uint8_t BlueLED;       
+
+void InitPatternA(void){
+    SparklePatternA[0]=pBlack;
+    SparklePatternA[1]=pRed;
+    SparklePatternA[2]=pBlack;
+    SparklePatternA[3]=pOrange;
+    SparklePatternA[4]=pBlack;
+    SparklePatternA[5]=pRed;
+    SparklePatternA[6]=pBlack;
+    SparklePatternA[7]=pRed;
+    SparklePatternA[8]=pOrange;    
+    SparklePatternA[9]=pWhite;     
+    SparklePatternA[10]=pLightYellow;    
+    SparklePatternA[11]=pRed; 
+    SparklePatternA[12]=pOrange; 
+    SparklePatternA[13]=pOrange;    
+    SparklePatternA[14]=pBlack;     
+    SparklePatternA[15]=pLightYellow;    
+    SparklePatternA[16]=pWhite; 
+    SparklePatternA[17]=pOrange;     
+    SparklePatternA[18]=pLightYellow;    
+    SparklePatternA[19]=pRed;        
+}
+
+void InitPatternB(void){
+    SparklePatternB[0]=pWhite;
+    SparklePatternB[1]=pWhite;
+    SparklePatternB[2]=pOrange;
+    SparklePatternB[3]=pOrange;
+    SparklePatternB[4]=pYellow;
+    SparklePatternB[5]=pYellow;
+    SparklePatternB[6]=pLightYellow;
+    SparklePatternB[7]=pLightYellow;
+    SparklePatternB[8]=pBlack;    
+    SparklePatternB[9]=pBlack;     
+    SparklePatternB[10]=pBlack;    
+    SparklePatternB[11]=pBlack; 
+    SparklePatternB[12]=pBlack; 
+    SparklePatternB[13]=pBlack;    
+    SparklePatternB[14]=pBlack;     
+    SparklePatternB[15]=pBlack;    
+    SparklePatternB[16]=pBlack; 
+    SparklePatternB[17]=pBlack;     
+    SparklePatternB[18]=pBlack;    
+    SparklePatternB[19]=pBlack;        
+}
+
+
+
+//Ripple the whole chain of LEDS one way or the other
+void Ripple(struct Pixel NextPixel, enum  RippleDirections Direction){
+    struct Pixel TempPixel;
     
-    for (int i=0; i< RAMsize; i++){
+    bool Finished=false;
+    uint8_t Index=48;
+    while(!Finished){
+        TempPixel.Red=DisplayRAM[(Index*3)];
+        TempPixel.Green=DisplayRAM[((Index*3)+1)];        
+        TempPixel.Blue=DisplayRAM[((Index*3)+2)];        
         
-        RedLED=DisplayRAM[i].Red;
-        GreenLED=DisplayRAM[i].Green;
-        BlueLED=DisplayRAM[i].Blue;
+        DisplayRAM[((Index+1)*3)]=TempPixel.Red;
+        DisplayRAM[(((Index+1)*3)+1)]=TempPixel.Green;        
+        DisplayRAM[(((Index+1)*3)+2)]=TempPixel.Blue;  
         
-        //OUTPUT TO PWMs
+        if (Index==0) Finished=true;
+        else Index--;
+    } 
+    
+    // And then the feed in
+        DisplayRAM[0]=NextPixel.Red;
+        DisplayRAM[1]=NextPixel.Green;        
+        DisplayRAM[2]=NextPixel.Blue;
         
-    }    
+    return;
 }
 
